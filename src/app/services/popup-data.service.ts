@@ -15,21 +15,6 @@ private popupData: { [key: string]: string[] } = {
       "Identify skill gaps and training needs",
       "Set individual performance goals"
     ],
-    topPerformers: [
-      "Dyawara Sai Chandra",
-      "Mounika Kondreddigari",
-      "Purushotham Kandi"
-    ],
-    averagePerformers: [
-      "Aayush Goyal",
-      "Sandeep Kumar",
-      "Dhivagar S"
-    ],
-    bottomPerformers: [
-      "Ankur Kumar",
-      "Naman Bhagoliwal",
-      "Sangeetha Gopalsamy"
-    ]
   };
 
   constructor() { }

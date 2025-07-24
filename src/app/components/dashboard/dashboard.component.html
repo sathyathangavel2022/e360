@@ -86,21 +86,15 @@
       <div class="bg-white p-6 rounded-lg shadow w-full">
         <div class="flex items-center justify-between">
           <h3 class="text-lg font-bold text-gray-800">Overall Site Performance</h3>
-          <select id="sitePerformanceDropdown"
-            class="border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ml-4"
-            (change)="updateSitePerformance()">
-            <option value="all">All Specializations</option>
-            <option value="Compute">Compute</option>
-            <option value="DevOps">DevOps</option>
-            <option value="Security">Security</option>
-            <option value="GKE">GKE</option>
-            <option value="Networking">Networking</option>
-            <option value="Databases">Databases</option>
-            <option value="Data Analytics">Data Analytics</option>
-            <option value="AI/ML">AI/ML</option>
-            <option value="Serverless">Serverless</option>
-            <option value="Storage">Storage</option>
-          </select>
+          <select
+  class="px-3 py-2 rounded border"
+  [(ngModel)]="selectedSpecialization"
+  (change)="calculateCounts()"
+>
+  <option *ngFor="let spec of specializations" [value]="spec">
+    {{ spec }}
+  </option>
+</select>
         </div>
         <ul id="sitePerformanceList" class="space-y-6 text-base text-gray-700 mt-6">
           <li class="flex justify-between items-center border-b pb-4">
@@ -281,33 +275,35 @@
     </div>
   </section>
 
-  <div id="popupModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50"
-    [ngClass]="{'flex': showStatPopup, 'hidden': !showStatPopup}">
-    <div class="bg-white rounded-lg shadow-lg p-6 w-11/12 md:w-1/3">
-      <div class="flex justify-between items-center mb-4">
-        <h2 id="popupTitle" class="text-lg font-semibold">{{ popupTitle }}</h2>
-        <button (click)="closePopup()" class="text-gray-500 hover:text-gray-700">&times;</button>
-      </div>
-      <!-- Show search only in popup -->
-      <div *ngIf="showStatPopup">
-        <input type="text" [(ngModel)]="searchTerm" (input)="onSearchAssociate()" placeholder="Search associates..."
-          class="w-full mb-3 p-2 border border-gray-300 rounded"
-          *ngIf="popupTitle === 'Total Associates' || popupTitle === 'Top Performers' || popupTitle === 'Average Performers' || popupTitle === 'Bottom Performers'" />
-      </div>
-      <ul id="popupContent" class="space-y-2 text-sm text-gray-700 max-h-72 overflow-y-auto">
-        <li *ngFor="let item of filteredPopupContent">{{ item }}</li>
-      </ul>
-    </div>
-  </div>
-
-  <div id="missionModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-    <div class="bg-white rounded-lg shadow-lg p-6 w-11/12 md:w-1/3">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-lg font-semibold" id="missionTitle">Missions</h2>
-        <button (click)="closeModal()" class="text-gray-500 hover:text-gray-700">&times;</button>
-      </div>
-      <ul class="space-y-2 text-sm text-gray-700" id="missionList"></ul>
-    </div>
-  </div>
-
 </main>
+
+<div class="fixed inset-0 bg-black bg-opacity-50 z-50 justify-center items-center pt-12"
+  [ngClass]="{'flex': showStatPopup, 'hidden': !showStatPopup}">
+  <div class="bg-white rounded-lg shadow-lg p-6 w-11/12 md:w-1/3">
+    <div class="flex justify-between items-center mb-4">
+      <h2 id="popupTitle" class="text-lg font-semibold">{{ popupTitle }}</h2>
+      <button (click)="closePopup()" class="text-gray-500 hover:text-gray-700">&times;</button>
+    </div>
+    <!-- Show search only in popup -->
+    <div *ngIf="showStatPopup">
+      <input type="text" [(ngModel)]="searchTerm" (input)="onSearchAssociate()" placeholder="Search associates..."
+        class="w-full mb-3 p-2 border border-gray-300 rounded"
+        *ngIf="popupTitle === 'Total Associates' || popupTitle === 'Top Performers' || popupTitle === 'Average Performers' || popupTitle === 'Bottom Performers'" />
+    </div>
+    <ul id="popupContent" class="space-y-2 text-sm text-gray-700 max-h-72 overflow-y-auto">
+      <li *ngFor="let item of filteredPopupContent" class="bg-blue-100 rounded px-4 py-2 font-medium">
+        {{ item }}
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div id="missionModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+  <div class="bg-white rounded-lg shadow-lg p-6 w-11/12 md:w-1/3">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-lg font-semibold" id="missionTitle">Missions</h2>
+      <button (click)="closeModal()" class="text-gray-500 hover:text-gray-700">&times;</button>
+    </div>
+    <ul class="space-y-2 text-sm text-gray-700" id="missionList"></ul>
+  </div>
+</div>

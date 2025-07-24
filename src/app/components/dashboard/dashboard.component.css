@@ -204,7 +204,7 @@
 .right-align-container {
   display: flex;
   flex-direction: column;
-  align-items: flex-end; /* Aligns content to the right */
+  align-items: flex-end; 
   width: 100%;
 }
 

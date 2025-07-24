@@ -5,12 +5,18 @@ interface SiteStats {
   bottom: number;
   kudos: string;
 }
+interface Person {
+  name: string;
+  status: string;
+  specialization:string;
+}
 
 import { Component, OnInit } from '@angular/core';
 import { SiteDataService } from '../../services/site-data.service';
 import { GoogleAuthService } from '../../services/google-auth.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { filter } from 'rxjs';
 
 
 
@@ -38,47 +44,111 @@ export class DashboardComponent implements OnInit {
   endDate: string = '';
   allItems: any[] = [/* your data here */];
   filteredItems: any[] = [];
+  selectedSpecialization: string = 'All Specializations';
+
+specializations: string[] = [
+  'All Specializations',
+  'Compute',
+  'DevOps',
+  'Security',
+  'GKE',
+  'Networking',
+  'Databases',
+  'Data Analytics',
+  'AI/ML',
+  'Serverless',
+  'Storage'
+];
 
   filterByDate() {
     const start = new Date(this.startDate);
     const end = new Date(this.endDate);
 
     this.filteredItems = this.allItems.filter(item => {
-      const itemDate = new Date(item.date); // assuming item.date is a string
+      const itemDate = new Date(item.date);
       return itemDate >= start && itemDate <= end;
     });
   }
 
   sheetData: any[] = [];
   headers: string[] = [];
-
-
+  trainingSheetHeaders: string[] = [];
+  trainingSheetData: any[] = [];
+  nestedCount = 0;
+  readyCount = 0;
+  trainingCount = 0;
+  onboardingCount = 0;
+data: Person[] =[];
   ngOnInit(): void {
-    const spreadsheetId = '1H7LdfDNYhufySKJkQYcidL6cQbOVpFisUVZqG_bKBIE';
-    const range = 'TSR_LDAP_wise_Performance!B1:J100';
-    const apiKey = 'AIzaSyB2Wal4dub_mS231LVH2yq_oPQBckF74Q4';
+  const spreadsheetId = '1mfnbjmMP6nUavrjlV5C_g7W1S4Hx72jABsfY-aQiT10';
+  const range = 'TSR_LDAP_wise_Performance!B1:J100';
+  const apiKey = 'AIzaSyB2Wal4dub_mS231LVH2yq_oPQBckF74Q4';
 
-    this.googleAuth.getSheetData(spreadsheetId, range, apiKey).then(data => {
-      this.headers = data[0];
-      this.sheetData = data.slice(1);
-      const ratingIndex = this.headers.indexOf('Rating');
-      this.totalAssociates = this.sheetData.length;
-      this.topPerformers = this.sheetData.filter(row => row[ratingIndex] == 5 || row[ratingIndex] == 4).length;
-      this.averagePerformers = this.sheetData.filter(row => row[ratingIndex] == 3).length;
-      this.bottomPerformers = this.sheetData.filter(row => row[ratingIndex] == 2 || row[ratingIndex] == 1).length;
-    });
-  }
+  this.googleAuth.getSheetData(spreadsheetId, range, apiKey).then(data => {
+    this.headers = data[0];
+    this.sheetData = data.slice(1);
+    const ratingIndex = this.headers.indexOf('Rating');
+    const nameIndex = this.headers.indexOf('Name');
+const statusIndex = this.headers.indexOf('Status');
+const specializationIndex = this.headers.indexOf('Specialization');
+
+
+    this.totalAssociates = this.sheetData.length;
+    this.topPerformers = this.sheetData.filter(row => row[ratingIndex] == 5 || row[ratingIndex] == 4).length;
+    this.averagePerformers = this.sheetData.filter(row => row[ratingIndex] == 3).length;
+    this.bottomPerformers = this.sheetData.filter(row => row[ratingIndex] == 2 || row[ratingIndex] == 1).length;
+
+    this.data = this.sheetData
+      .map(row => ({
+        name: row[nameIndex]?.trim(),
+        status: row[statusIndex]?.trim(),
+        specialization: row[specializationIndex]?.trim()
+  }))
+.filter(row => row.name && row.status && row.specialization);
+    this.calculateCounts();
+  });
+
+  // ✅ Also load Sheet 2 here:
+  this.fetchTrainingSheetData(); 
+}
+
 
 
   async loadData() {
 
-    const spreadsheetId = '1H7LdfDNYhufySKJkQYcidL6cQbOVpFisUVZqG_bKBIE';
+    const spreadsheetId = '1mfnbjmMP6nUavrjlV5C_g7W1S4Hx72jABsfY-aQiT10';
 
     const range = 'TSR_LDAP_wise_Performance!B1:J13';
 
     this.sheetData = await this.googleAuth.getSheetData(spreadsheetId, range, 'AIzaSyB2Wal4dub_mS231LVH2yq_oPQBckF74Q4');
     console.log(this.sheetData);
   }
+
+  fetchTrainingSheetData() {
+    const spreadsheetId = '1mfnbjmMP6nUavrjlV5C_g7W1S4Hx72jABsfY-aQiT10';
+    const range = 'Training!A1:C21';
+    const apiKey = 'AIzaSyB2Wal4dub_mS231LVH2yq_oPQBckF74Q4';
+
+    this.googleAuth.getSheetData(spreadsheetId, range, apiKey).then(data => {
+      // Process the data as needed
+      console.log('Training sheet data:', data);
+      this.trainingSheetHeaders = data[0];
+    const nameIndex = this.trainingSheetHeaders.indexOf('Name');
+    const statusIndex = this.trainingSheetHeaders.indexOf('Status');
+    const rows = data.slice(1);
+    const specIndex = this.trainingSheetHeaders.indexOf('Specialization'); 
+
+this.data = rows
+  .map(row => ({
+    name: row[nameIndex]?.trim(),
+    status: row[statusIndex]?.trim(),
+    specialization: row[specIndex]?.trim()
+  }))
+  .filter(row => row.name && row.status && row.specialization);
+
+    this.calculateCounts();
+  });
+}
 
   updateSiteData(): void {
     const data = this.siteDataService.getSiteData(this.selectedSite);
@@ -170,11 +240,21 @@ export class DashboardComponent implements OnInit {
       { name: 'Serverless', score: 5 },
       { name: 'Storage', score: 4 }
     ],
-
-
-    // add more mappings as needed
   };
 
+  calculateCounts() {
+  const filtered = this.selectedSpecialization === 'All Specializations'
+    ? this.data
+    : this.data.filter(d =>
+        d.specialization.toLowerCase() === this.selectedSpecialization.toLowerCase()
+      );
+      console.log("Filtered data for", this.selectedSpecialization, filtered);
+
+  this.nestedCount = filtered.filter(d => d.status?.toLowerCase() === 'nested').length;
+  this.readyCount = filtered.filter(d => d.status?.toLowerCase() === 'ready').length;
+  this.trainingCount = this.nestedCount + this.readyCount;
+  this.onboardingCount = filtered.filter(d => d.status?.toLowerCase() === 'onboarding').length;
+}
   showMissions(missionType: string) {
     this.selectedMission = missionType;
 
@@ -188,7 +268,7 @@ export class DashboardComponent implements OnInit {
 
       missionTitle.textContent = missionType;
 
-      missionList.innerHTML = ''; // Clear previous content
+      missionList.innerHTML = '';
 
       const missions = this.missionData[missionType] || [];
 
@@ -218,7 +298,6 @@ export class DashboardComponent implements OnInit {
   }
 
   closeModal() {
-    // Add your logic to close the modal here
     const modal = document.getElementById('missionModal');
     if (modal) {
       modal.classList.add('hidden');
@@ -281,13 +360,13 @@ export class DashboardComponent implements OnInit {
     this.filteredPopupContent = [...this.popupContent];
   }
 
+
+
   closePopup() {
     this.showStatPopup = false;
   }
   filterStats(filterType: string) {
-    // Add your filtering logic here
-    // For now, just log the filter type
+    //Filtering logic here
     console.log('Filtering stats by:', filterType);
-    // Example: you might update siteStats based on the filterType
   }
 }
